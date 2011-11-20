@@ -1,4 +1,6 @@
 import simplejson
+import InstaAuth
+import WebKeys
 
 PHOTOS_PREFIX = "/photos/instaplex"
 
@@ -10,13 +12,7 @@ NAME = L('Instagram Title')
 ART  = 'art-default.jpg'
 ICON = 'icon-default.png'
 
-CLIENT_ID = 'c5142704e6104afe89552d7d170e6915'
-POPULAR_URL = 'https://api.instagram.com/v1/media/popular?client_id='
-ZURICH_URL = 'https://api.instagram.com/v1/tags/zurich/media/recent?client_id='
-NEWYORK_URL = 'https://api.instagram.com/v1/tags/newyork/media/recent?client_id='
-PARIS_URL = 'https://api.instagram.com/v1/tags/paris/media/recent?client_id='
-## AUTH = 'https://instagram.com/oauth/authorize/?client_id=c5142704e6104afe89552d7d170e6915&redirect_uri=http://www.till-art.net/instaplex&response_type=token'
-
+token = None
 
 ####################################################################################################
 
@@ -46,7 +42,7 @@ def Start():
     VideoItem.thumb = R(ICON)
     
     HTTP.CacheTime = CACHE_1HOUR
-
+    
 # see:
 #  http://dev.plexapp.com/docs/Functions.html#ValidatePrefs
 def ValidatePrefs():
@@ -64,9 +60,7 @@ def ValidatePrefs():
             "Error",
             "You need to provide both a user and password"
         )
-
-  
-
+        
 
 #### the rest of these are user created functions and
 #### are not reserved by the plugin framework.
@@ -109,6 +103,19 @@ def PhotosMainMenu():
     dir.Append(
         Function(
             DirectoryItem(
+                MyPhotoStream,
+                "My Photos",
+                subtitle="Instagram",
+                summary="Your own photos",
+                thumb=R(ICON),
+                art=R(ART)
+            )
+        )
+    )
+    
+    dir.Append(
+        Function(
+            DirectoryItem(
                 ZurichStream,
                 "Zurich",
                 subtitle="Instagram",
@@ -139,6 +146,19 @@ def PhotosMainMenu():
                 "Paris",
                 subtitle="Instagram",
                 summary="Tag: #paris",
+                thumb=R(ICON),
+                art=R(ART)
+            )
+        )
+    )
+    
+    dir.Append(
+        Function(
+            DirectoryItem(
+                LoginItem,
+                "Login",
+                subtitle="Login",
+                summary="Login to Instagram New",
                 thumb=R(ICON),
                 art=R(ART)
             )
@@ -189,7 +209,45 @@ def PopularStream(sender):
     
     dir = MediaContainer(title2 = 'Popular', viewGroup = 'Pictures')
     
-    request = HTTP.Request(POPULAR_URL + CLIENT_ID, cacheTime=0)
+    request = HTTP.Request(WebKeys.POPULAR_URL + WebKeys.CLIENT_ID, cacheTime=0)
+    request.load()
+    Log.Debug("---- Received object: ")
+    # Log.Debug(request.content)
+    popular = simplejson.loads(request.content)
+    #Log.Debug(popular)
+    for data in popular['data']:
+        #Log.Debug("Data: ")
+        #Log.Debug(data['images']['standard_resolution']['url'])     
+        url = data['images']['standard_resolution']['url']
+        thumbUrl = data['images']['thumbnail']['url']
+        Log.Debug('Comment:')
+        if len(data['comments']['data']) > 0:
+            comment = data['comments']['data'][0]['text']
+            Log.Debug(comment)
+        else:
+            comment = ""
+        Log.Debug('Caption: ')
+        Log.Debug(data['caption'])
+        if data['caption'] != None:
+            caption = data['caption']['text']
+        else:
+            caption = ""
+        dir.Append(PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl))
+    
+    return dir
+
+def MyPhotoStream(sender):
+    
+    caption = ""
+    comment = ""
+
+    ## you might want to try making me return a MediaContainer
+    ## containing a list of DirectoryItems to see what happens =)
+    
+    dir = MediaContainer(title2 = 'Popular', viewGroup = 'Pictures')
+    token = Data.Load("oauthtoken")
+    Log.Debug("MyPhotoStream: oauthtoken: " + token)
+    request = HTTP.Request(WebKeys.MY_PHOTOS_URL + token)
     request.load()
     Log.Debug("---- Received object: ")
     # Log.Debug(request.content)
@@ -226,7 +284,7 @@ def ZurichStream(sender):
     
     dir = MediaContainer(title2 = 'Zurich', viewGroup = 'Pictures')
     
-    request = HTTP.Request(ZURICH_URL + CLIENT_ID, cacheTime=0)
+    request = HTTP.Request(WebKeys.ZURICH_URL + WebKeys.CLIENT_ID, cacheTime=0)
     request.load()
     Log.Debug("---- Received object: ")
     Log.Debug(request.content)
@@ -263,7 +321,7 @@ def NewYorkStream(sender):
     
     dir = MediaContainer(title2 = 'New York', viewGroup = 'Pictures')
     
-    request = HTTP.Request(NEWYORK_URL + CLIENT_ID, cacheTime=0)
+    request = HTTP.Request(WebKeys.NEWYORK_URL + WebKeys.CLIENT_ID, cacheTime=0)
     request.load()
     Log.Debug("---- Received object: ")
     Log.Debug(request.content)
@@ -300,7 +358,7 @@ def ParisStream(sender):
     
     dir = MediaContainer(title2 = 'Paris', viewGroup = 'Pictures')
     
-    request = HTTP.Request(PARIS_URL + CLIENT_ID, cacheTime=0)
+    request = HTTP.Request(WebKeys.PARIS_URL + WebKeys.CLIENT_ID, cacheTime=0)
     request.load()
     Log.Debug("---- Received object: ")
     Log.Debug(request.content)
@@ -327,7 +385,19 @@ def ParisStream(sender):
     
     return dir
 
+def LoginItem(sender):
+    
+    global token   
+    Log.Debug("InstaAuth Inst")
+    instaAuth = InstaAuth.InstaAuth(clientId = WebKeys.CLIENT_ID, redirectUri = WebKeys.REDIRECT_URI)
 
+    token = instaAuth.authorize()
+    Log.Debug("LoginItem: token: " + str(token))
+    Data.Save("oauthtoken", data = token)
+    
+    return
+
+
 # Part of the "search" example 
 # query will contain the string that the user entered
 # see also:
