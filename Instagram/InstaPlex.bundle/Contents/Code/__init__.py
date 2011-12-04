@@ -185,158 +185,32 @@ def PhotosMainMenu():
 
 def PopularStream(sender):
     
-    caption = ''
-    comment = ''
-
-    ## you might want to try making me return a MediaContainer
-    ## containing a list of DirectoryItems to see what happens =)
-    
-    dir = MediaContainer(title2 = 'Popular', viewGroup = 'Pictures')
-    
-    request = HTTP.Request(WebKeys.POPULAR_URL, cacheTime=0)
-    request.load()
-    Log.Debug('---- Received object: ')
-    # Log.Debug(request.content)
-    popular = simplejson.loads(request.content)
-    #Log.Debug(popular)
-    for data in popular['data']:
-        #Log.Debug('Data: ')
-        #Log.Debug(data['images']['standard_resolution']['url'])     
-        url = data['images']['standard_resolution']['url']
-        thumbUrl = data['images']['thumbnail']['url']
-        Log.Debug('Comment:')
-        if len(data['comments']['data']) > 0:
-            comment = data['comments']['data'][0]['text']
-            Log.Debug(comment)
-        else:
-            comment = ''
-        Log.Debug('Caption: ')
-        Log.Debug(data['caption'])
-        if data['caption'] != None:
-            caption = data['caption']['text']
-        else:
-            caption = ''
-        dir.Append(PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl))
-    
+    instaStream = InstaStream.InstaStream();
+    dir = instaStream.getPopularStream()
     return dir
 
 def MyPhotoStream(sender):
     
-    caption = ''
-    comment = ''
-
-    ## you might want to try making me return a MediaContainer
-    ## containing a list of DirectoryItems to see what happens =)
-    
-    dir = MediaContainer(title2 = 'Popular', viewGroup = 'Pictures')
-    token = Data.Load('oauthtoken')
-    Log.Debug('MyPhotoStream: oauthtoken: ' + token)
-    request = HTTP.Request(WebKeys.MY_PHOTOS_URL + token)
-    request.load()
-    Log.Debug('---- Received object: ')
-    # Log.Debug(request.content)
-    popular = simplejson.loads(request.content)
-    #Log.Debug(popular)
-    for data in popular['data']:
-        #Log.Debug('Data: ')
-        #Log.Debug(data['images']['standard_resolution']['url'])     
-        url = data['images']['standard_resolution']['url']
-        thumbUrl = data['images']['thumbnail']['url']
-        Log.Debug('Comment:')
-        if len(data['comments']['data']) > 0:
-            comment = data['comments']['data'][0]['text']
-            Log.Debug(comment)
-        else:
-            comment = ''
-        Log.Debug('Caption: ')
-        Log.Debug(data['caption'])
-        if data['caption'] != None:
-            caption = data['caption']['text']
-        else:
-            caption = ''
-        dir.Append(PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl))
-    
+    instaStream = InstaStream.InstaStream();
+    dir = instaStream.getOwnPhotosStream()
     return dir
     
 def ZurichStream(sender):
     
     instaStream = InstaStream.InstaStream();
-    dir = instaStream.getStream(name = 'ZŸrich', tag = 'paris')
-    Log.Debug('Got dir, return...')
+    dir = instaStream.getTagStream(tag = 'zurich')
     return dir
 
 def NewYorkStream(sender):
     
-    caption = ''
-    comment = ''
-
-    ## you might want to try making me return a MediaContainer
-    ## containing a list of DirectoryItems to see what happens =)
-    
-    dir = MediaContainer(title2 = 'New York', viewGroup = 'Pictures')
-    
-    request = HTTP.Request(WebKeys.NEWYORK_URL, cacheTime=0)
-    request.load()
-    Log.Debug('---- Received object: ')
-    Log.Debug(request.content)
-    popular = simplejson.loads(request.content)
-    #Log.Debug(popular)
-    for data in popular['data']:
-        #Log.Debug('Data: ')
-        #Log.Debug(data['images']['standard_resolution']['url'])     
-        url = data['images']['standard_resolution']['url']
-        thumbUrl = data['images']['thumbnail']['url']
-        Log.Debug('Comment:')
-        if len(data['comments']['data']) > 0:
-            comment = data['comments']['data'][0]['text']
-            Log.Debug(comment)
-        else:
-            comment = ''
-        Log.Debug('Caption: ')
-        Log.Debug(data['caption'])
-        if data['caption'] != None:
-            caption = data['caption']['text']
-        else:
-            caption = ''
-        dir.Append(PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl))
-    
+    instaStream = InstaStream.InstaStream();
+    dir = instaStream.getTagStream(tag = 'newyork')
     return dir
 
 def ParisStream(sender):
     
-    caption = ''
-    comment = ''
-
-    ## you might want to try making me return a MediaContainer
-    ## containing a list of DirectoryItems to see what happens =)
-    
-    dir = MediaContainer(title2 = 'Paris', viewGroup = 'Pictures')
-    
-    request = HTTP.Request(WebKeys.PARIS_URL, cacheTime=0)
-    request.load()
-    Log.Debug('- Received object: ')
-    Log.Debug(request.content)
-    popular = simplejson.loads(request.content)
-    #Log.Debug(popular)
-    for data in popular['data']:
-        Log.Debug('Data: ')
-        Log.Debug(data['images']['standard_resolution']['url'])     
-        url = data['images']['standard_resolution']['url']
-        thumbUrl = data['images']['thumbnail']['url']
-        Log.Debug('Comment:')
-        if len(data['comments']['data']) > 0:
-            comment = data['comments']['data'][0]['text']
-            Log.Debug(comment)
-        else:
-            comment = ''
-        Log.Debug('Caption: ')
-        Log.Debug(data['caption'])
-        if data['caption'] != None:
-            caption = data['caption']['text']
-        else:
-            caption = ''
-        dir.Append(PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl))
-    
+    instaStream = InstaStream.InstaStream();
+    dir = instaStream.getTagStream(tag = 'paris')
     return dir
 
 def LoginItem(sender):
