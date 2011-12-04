@@ -1,16 +1,12 @@
 import simplejson
 import InstaAuth
+import InstaStream
 import WebKeys
+import Resources
 
 PHOTOS_PREFIX = '/photos/instaplex'
 
 NAME = L('Instagram Title')
-
-# make sure to replace artwork with what you want
-# these filenames reference the example files in
-# the Contents/Resources/ folder in the bundle
-ART  = 'art-default.jpg'
-ICON = 'icon-default.png'
 
 token = None
 
@@ -24,7 +20,7 @@ def Start():
     ## see also:
     ##  http://dev.plexapp.com/docs/mod_Plugin.html
     ##  http://dev.plexapp.com/docs/Bundle.html#the-strings-directory
-    Plugin.AddPrefixHandler(PHOTOS_PREFIX, PhotosMainMenu, NAME, ICON, ART)
+    Plugin.AddPrefixHandler(PHOTOS_PREFIX, PhotosMainMenu, NAME, Resources.ICON, Resources.ART)
 
     Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
     Plugin.AddViewGroup('Details', viewMode='InfoList', mediaType='items')
@@ -37,9 +33,9 @@ def Start():
     ##  http://dev.plexapp.com/docs/Objects.html
     MediaContainer.title1 = NAME
     MediaContainer.viewGroup = 'List'
-    MediaContainer.art = R(ART)
-    DirectoryItem.thumb = R(ICON)
-    VideoItem.thumb = R(ICON)
+    MediaContainer.art = R(Resources.ART)
+    DirectoryItem.thumb = R(Resources.ICON)
+    VideoItem.thumb = R(Resources.ICON)
     
     HTTP.CacheTime = CACHE_1HOUR
     
@@ -62,18 +58,6 @@ def ValidatePrefs():
         )
         
 
-#### the rest of these are user created functions and
-#### are not reserved by the plugin framework.
-#### see: http://dev.plexapp.com/docs/Functions.html for
-#### a list of reserved functions above
-
-
-
-#
-# Example main menu referenced in the Start() method
-# for the 'Photos' prefix handler
-#
-
 def PhotosMainMenu():
 
     # Container acting sort of like a folder on
@@ -94,8 +78,8 @@ def PhotosMainMenu():
                 'Popular',
                 subtitle='Instagram',
                 summary='The recent popular photos',
-                thumb=R(ICON),
-                art=R(ART)
+                thumb=R(Resources.ICON),
+                art=R(Resources.ART)
             )
         )
     )
@@ -107,8 +91,8 @@ def PhotosMainMenu():
                 'My Photos',
                 subtitle='Instagram',
                 summary='Your own photos',
-                thumb=R(ICON),
-                art=R(ART)
+                thumb=R(Resources.ICON),
+                art=R(Resources.ART)
             )
         )
     )
@@ -120,8 +104,8 @@ def PhotosMainMenu():
                 'Zurich',
                 subtitle='Instagram',
                 summary='Tag: #zurich',
-                thumb=R(ICON),
-                art=R(ART)
+                thumb=R(Resources.ICON),
+                art=R(Resources.ART)
             )
         )
     )
@@ -133,8 +117,8 @@ def PhotosMainMenu():
                 'New York',
                 subtitle='Instagram',
                 summary='Tag: #newyork',
-                thumb=R(ICON),
-                art=R(ART)
+                thumb=R(Resources.ICON),
+                art=R(Resources.ART)
             )
         )
     )
@@ -146,8 +130,8 @@ def PhotosMainMenu():
                 'Paris',
                 subtitle='Instagram',
                 summary='Tag: #paris',
-                thumb=R(ICON),
-                art=R(ART)
+                thumb=R(Resources.ICON),
+                art=R(Resources.ART)
             )
         )
     )
@@ -159,8 +143,8 @@ def PhotosMainMenu():
                 'Login',
                 subtitle='Login',
                 summary='Login to Instagram New',
-                thumb=R(ICON),
-                art=R(ART)
+                thumb=R(Resources.ICON),
+                art=R(Resources.ART)
             )
         )
     )
@@ -175,8 +159,8 @@ def PhotosMainMenu():
                 'Search title',
                 'Search subtitle',
                 summary='This lets you search stuff',
-                thumb=R(ICON),
-                art=R(ART)
+                thumb=R(Resources.ICON),
+                art=R(Resources.ART)
             )
         )
     )
@@ -192,7 +176,7 @@ def PhotosMainMenu():
             title='Your preferences',
             subtile='So you can set preferences',
             summary='lets you set preferences',
-            thumb=R(ICON)
+            thumb=R(Resources.ICON)
         )
     )
 
@@ -276,39 +260,9 @@ def MyPhotoStream(sender):
     
 def ZurichStream(sender):
     
-    caption = ''
-    comment = ''
-
-    ## you might want to try making me return a MediaContainer
-    ## containing a list of DirectoryItems to see what happens =)
-    
-    dir = MediaContainer(title2 = 'Zurich', viewGroup = 'Pictures')
-    
-    request = HTTP.Request(WebKeys.ZURICH_URL, cacheTime=0)
-    request.load()
-    Log.Debug('---- Received object: ')
-    Log.Debug(request.content)
-    popular = simplejson.loads(request.content)
-    #Log.Debug(popular)
-    for data in popular['data']:
-        #Log.Debug('Data: ')
-        #Log.Debug(data['images']['standard_resolution']['url'])     
-        url = data['images']['standard_resolution']['url']
-        thumbUrl = data['images']['thumbnail']['url']
-        Log.Debug('Comment:')
-        if len(data['comments']['data']) > 0:
-            comment = data['comments']['data'][0]['text']
-            Log.Debug(comment)
-        else:
-            comment = ''
-        Log.Debug('Caption: ')
-        Log.Debug(data['caption'])
-        if data['caption'] != None:
-            caption = data['caption']['text']
-        else:
-            caption = ''
-        dir.Append(PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl))
-    
+    instaStream = InstaStream.InstaStream();
+    dir = instaStream.getStream(name = 'ZŸrich', tag = 'paris')
+    Log.Debug('Got dir, return...')
     return dir
 
 def NewYorkStream(sender):
@@ -360,13 +314,13 @@ def ParisStream(sender):
     
     request = HTTP.Request(WebKeys.PARIS_URL, cacheTime=0)
     request.load()
-    Log.Debug('---- Received object: ')
+    Log.Debug('- Received object: ')
     Log.Debug(request.content)
     popular = simplejson.loads(request.content)
     #Log.Debug(popular)
     for data in popular['data']:
-        #Log.Debug('Data: ')
-        #Log.Debug(data['images']['standard_resolution']['url'])     
+        Log.Debug('Data: ')
+        Log.Debug(data['images']['standard_resolution']['url'])     
         url = data['images']['standard_resolution']['url']
         thumbUrl = data['images']['thumbnail']['url']
         Log.Debug('Comment:')
