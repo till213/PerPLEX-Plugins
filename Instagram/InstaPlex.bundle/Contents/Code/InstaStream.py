@@ -5,77 +5,88 @@ Created on 04.12.2011
 '''
 
 import WebKeys
+import Resources
+    
+def getPopularStream():
+    '''Retrieves the Popular photo stream'''
+    token = Data.Load('oauthtoken')
+    
+    title = "Popular"
+    request = HTTP.Request(WebKeys.POPULAR_URL + token)
+    return readStream(title, WebKeys.POPULAR_URL + token)
+ 
+def getOwnPhotosStream():
+    '''Retrieves the user photos; user needs to be logged in, that is a valid OAuth 2 token is necessary.'''
+    token = Data.Load('oauthtoken')
+    
+    title = "My Photos"
+    request = HTTP.Request(WebKeys.MY_PHOTOS_URL + token)
+    return readStream(title, WebKeys.MY_PHOTOS_URL + token)
 
-class InstaStream:
-    
-    def getPopularStream(self):
-        '''Retrieves the Popular photo stream'''
-        token = Data.Load('oauthtoken')
-        Log.Debug('MyPhotoStream: oauthtoken: ' + token)
+def getTagStream(tag, name = None):
+    '''Retrieves the Instagram photo stream, given by its tag and returns a MediaContainer containing the photo URLs
+    named name'''
+    title = None
+    if (name != None):
+        title = name
+    else:
+        title = tag
+    request = HTTP.Request(WebKeys.TAG_STREAM_URL % tag) 
+    return readStream(title, WebKeys.TAG_STREAM_URL % tag)
+
+def readStream(title, url):
+    dir = MediaContainer(title2 = title, viewGroup = 'Pictures')
+    photoItem = None
+    #request.load()
+    #stream = simplejson.loads(request.content)
+    stream = JSON.ObjectFromURL(url)
+    #s = simplejson.dumps(stream, sort_keys=True, indent=4 * ' ')
+    #Log.Debug('\n'.join([l.rstrip() for l in  s.splitlines()]))
+    for data in stream['data']:
+        photoItem = getPhotoItem(data)
         
-        title = "Popular"
-        request = HTTP.Request(WebKeys.POPULAR_URL + token)
-        return self.readStream(title, request)
-    
-    def getOwnPhotosStream(self):
-        '''Retrieves the user photos; user needs to be logged in, that is a valid OAuth 2 token is necessary.'''
-        token = Data.Load('oauthtoken')
-        Log.Debug('MyPhotoStream: oauthtoken: ' + token)
+        if (photoItem != None):
+            dir.Append(photoItem)
+            
+    pagination = stream['pagination']
+    if pagination != None:
+        nextUrl = pagination['next_url']
+        Log.Debug('Next URL: ' + str(nextUrl))            
+        #dir.Append(PhotoItem(Function(nextUrlF), title="title", summary="summary", thumb=None))
+        dir.Append(
+            Function(
+                DirectoryItem(
+                    nextUrlF3,
+                    'Next',
+                    subtitle='Instagram',
+                    summary='Tag: #newyork',
+                    thumb=R(Resources.ICON),
+                    art=R(Resources.ART)
+                )
+            )
+        )
         
-        title = "My Photos"
-        request = HTTP.Request(WebKeys.MY_PHOTOS_URL + token)
-        return self.readStream(title, request)
-    
-    def getTagStream(self, tag, name = None):
-        '''Retrieves the Instagram photo stream, given by its tag and returns a MediaContainer containing the photo URLs
-        named name'''
-        title = None
-        if (name != None):
-            title = name
-        else:
-            title = tag
-        request = HTTP.Request(WebKeys.TAG_STREAM_URL % tag, cacheTime=0) 
-        return self.readStream(title, request)
-    
-    def readStream(self, title, request):
-        dir = MediaContainer(title2 = title, viewGroup = 'Pictures')
-        photoItem = None
-        request.load()
-        Log.Debug('- Received object: ')
-        #Log.Debug(request.content)
-        stream = simplejson.loads(request.content)
-        #Log.Debug(stream)
-        Log.Debug('Got Stream, iterating now...')
-        try:
-            for data in stream['data']:
-                #Log.Debug('Data: ')
-                #Log.Debug(data['images']['standard_resolution']['url'])     
-                photoItem = self.getPhotoItem(data)
-                
-                if (photoItem != None):
-                    Log.Debug("PhotoItem: ")
-                    #Log.Debug('Appending photo item...')
-                    dir.Append(photoItem)
-        except Exception, e:
-            Log.Debug('An exception happened.')
-            Log.Debug(str(e))
-        Log.Debug('---Returning dir...')
-        return dir
-    
-    def getPhotoItem(self, data):
-        url = data['images']['standard_resolution']['url']
-        thumbUrl = data['images']['thumbnail']['url']
-        comment = None
-        caption = None
-        #Log.Debug('Comment:')
-        if len(data['comments']['data']) > 0:
-            comment = data['comments']['data'][0]['text']
-            Log.Debug(comment)
-        #Log.Debug('Caption: ')
-        #Log.Debug(data['caption'])
-        if data['caption'] != None:
-            caption = data['caption']['text']
-        #Log.Debug('url: ' + url + ' title: ' + caption + ' Summary: ' + comment + ' thumb: ' + thumbUrl)
-        return PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl)
         
-    
+    return dir
+
+def getPhotoItem(data):
+    url = data['images']['standard_resolution']['url']
+    thumbUrl = data['images']['thumbnail']['url']
+    comment = None
+    caption = None
+    if len(data['comments']['data']) > 0:
+        comment = data['comments']['data'][0]['text']
+    if data['caption'] != None:
+        caption = data['caption']['text']
+    return PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl)
+
+def nextUrlF3(sender):
+    Log.Debug('Next URL called.')
+    return MessageContainer(
+        'Not implemented',
+        'In real life, you would probably perform some search using python\nand then build a MediaContainer with items\nfor the results'
+    )
+
+
+       
+   
