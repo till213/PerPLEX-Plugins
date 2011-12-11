@@ -37,7 +37,6 @@ def getTagStream(tag, name = None):
     return readStream(url = WebKeys.TAG_STREAM_URL % tag, title = title)
 
 def readStream(url, title, forward = True):
-    nav = []
     oc = ObjectContainer(title2 = title, view_group = 'Pictures', no_history=True)
     photoObject = None
     stream = JSON.ObjectFromURL(url)
@@ -47,32 +46,33 @@ def readStream(url, title, forward = True):
         if (photoObject != None):
             oc.add(photoObject)
      
-    if forward:
-        if Data.Exists('navig'):  
-            nav = Data.LoadObject('navig')
-            if len(nav) > 0:                
-                previousUrl = nav[-1]
-                parsedUrl = urlparse.urlparse(previousUrl)
-                oc.add(DirectoryObject(key = Callback(morePhotos, url=previousUrl, title=title, forward=False), title = 'Previous...', thumb = R(Resources.PREVIOUS_ICON)))
-        nav.append(url)
-    else:
-        if Data.Exists('navig'):    
-            nav = Data.LoadObject('navig')
-            nav.pop()
-            if len(nav) > 1:
-                # the last element points to the page we're currently on; so take the second-last element     
-                previousUrl = nav[-2]
-                oc.add(DirectoryObject(key = Callback(morePhotos, url=previousUrl, title=title, forward=False), title = 'Previous...', thumb = R(Resources.PREVIOUS_ICON)))
-      
-    Data.SaveObject('navig', nav)
+#    if forward:
+#        if Data.Exists('navig'):  
+#            nav = Data.LoadObject('navig')
+#            if len(nav) > 0:                
+#                previousUrl = nav[-1]
+#                parsedUrl = urlparse.urlparse(previousUrl)
+#                oc.add(DirectoryObject(key = Callback(morePhotos, url=previousUrl, title=title, forward=False), title = 'Previous...', thumb = R(Resources.PREVIOUS_ICON)))
+#        nav.append(url)
+#    else:
+#        if Data.Exists('navig'):    
+#            nav = Data.LoadObject('navig')
+#            nav.pop()
+#            if len(nav) > 1:
+#                # the last element points to the page we're currently on; so take the second-last element     
+#                previousUrl = nav[-2]
+#                oc.add(DirectoryObject(key = Callback(morePhotos, url=previousUrl, title=title, forward=False), title = 'Previous...', thumb = R(Resources.PREVIOUS_ICON)))
+#      
+#    Data.SaveObject('navig', nav)
+#
+#    if 'pagination' in stream:        
+#        pagination = stream['pagination']
+#        Log.Debug('Pagination: ' + str(pagination))
+#        if pagination != None:
+#            nextUrl = pagination['next_url']
+#            oc.add(DirectoryObject(key = Callback(morePhotos, url=nextUrl, title=title, forward=True), title = 'Next...', thumb = R(Resources.NEXT_ICON)))
 
-    if 'pagination' in stream:        
-        pagination = stream['pagination']
-        Log.Debug('Pagination: ' + str(pagination))
-        if pagination != None:
-            nextUrl = pagination['next_url']
-            oc.add(DirectoryObject(key = Callback(morePhotos, url=nextUrl, title=title, forward=True), title = 'Next...', thumb = R(Resources.NEXT_ICON)))
-        
+    addNavigation(url = url, title = title, stream = stream, forward = forward, objectContainer = oc)    
     return oc
 
 def getPhotoObject(data):
@@ -86,6 +86,34 @@ def getPhotoObject(data):
         caption = data['caption']['text']
     photoObject = PhotoObject(title=caption, summary=comment, key=url, rating_key=url, thumb=Callback(getThumb, url=thumbUrl))
     return photoObject
+
+def addNavigation(url, title, stream, forward, objectContainer):
+    previousUrl = None
+    nav = []
+    
+    if forward:
+        if Data.Exists('navig'):  
+            nav = Data.LoadObject('navig')
+            if len(nav) > 0:                
+                previousUrl = nav[-1]
+        nav.append(url)
+    else:
+        if Data.Exists('navig'):    
+            nav = Data.LoadObject('navig')
+            nav.pop()
+            if len(nav) > 1:
+                # the last element points to the page we're currently on; so take the second-last element     
+                previousUrl = nav[-2]
+    
+    if previousUrl != None:
+        objectContainer.add(DirectoryObject(key = Callback(morePhotos, url=previousUrl, title=title, forward=False), title = 'Previous...', thumb = R(Resources.PREVIOUS_ICON)))  
+    Data.SaveObject('navig', nav)
+
+    if 'pagination' in stream:        
+        pagination = stream['pagination']
+        if pagination != None:
+            nextUrl = pagination['next_url']
+            objectContainer.add(DirectoryObject(key = Callback(morePhotos, url=nextUrl, title=title, forward=True), title = 'Next...', thumb = R(Resources.NEXT_ICON)))  
 
 def getThumb(url):
     return None
