@@ -6,10 +6,9 @@ import Resources
 PHOTOS_PREFIX = '/photos/instaplex'
 
 TITLE = L('Instagram Photos')
-####################################################################################################
 
 def Start():
-
+
     Plugin.AddPrefixHandler(PHOTOS_PREFIX, PhotosMainMenu, TITLE, Resources.ICON, Resources.ART)
 
     Log.Debug('Start: Adding View Groups...')
@@ -24,10 +23,9 @@ def Start():
     DirectoryObject.thumb = R(Resources.ICON)
     DirectoryObject.art = R(Resources.ART)
     
-    HTTP.CacheTime = 60 #CACHE_1HOUR
+    HTTP.CacheTime = 0 #CACHE_1HOUR
     
-# see:
-#  http://dev.plexapp.com/docs/Functions.html#ValidatePrefs
+
 def ValidatePrefs():
     u = Prefs['username']
     p = Prefs['password']
@@ -85,7 +83,6 @@ def LoginItem():
     instaAuth = InstaAuth.InstaAuth()
 
     token = instaAuth.authorize()
-    Log.Debug('LoginItem: token: ' + str(token))
     Data.Save('oauthtoken', data = token)
     return None
 
@@ -97,8 +94,8 @@ def getThumb(url):
     Log.Debug('getThumb: no thumb data, redirecting to default ICON resource.')
     return Redirect(R(Resources.ICON))
 
-def morePhotos(title,  url):
-    return InstaStream.readStream(title = title, url = url)
+def morePhotos(url, title, forward):
+    return InstaStream.readStream(url = url, title = title, forward = forward)
     
     
   

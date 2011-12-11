@@ -16,3 +16,4 @@ LOGIN_URL      = 'https://instagram.com/accounts/login/?next=/oauth/authorize/&c
 POPULAR_URL = 'https://api.instagram.com/v1/media/popular?client_id=' + CLIENT_ID
 TAG_STREAM_URL = 'https://api.instagram.com/v1/tags/%s/media/recent?client_id=' + CLIENT_ID
 MY_PHOTOS_URL = 'https://api.instagram.com/v1/users/self/media/recent?access_token='
+
