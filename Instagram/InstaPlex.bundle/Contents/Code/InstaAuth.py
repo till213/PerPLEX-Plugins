@@ -68,7 +68,7 @@ class MyHTTPRedirectHandler(urllib2.HTTPRedirectHandler):
         elif 'uri' in headers:
             newurl = headers.getheaders('uri')[0]
         
-        if newurl.startswith(WebKeys.REDIRECT_URI):
+        if newurl.startswith(WebKeys.REDIRECT_URL):
             tokens = newurl.split('=')
             self.token = tokens[1]
         else:

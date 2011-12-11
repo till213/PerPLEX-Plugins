@@ -5,36 +5,24 @@ import Resources
 
 PHOTOS_PREFIX = '/photos/instaplex'
 
-NAME = L('Instagram Title')
-
-token = None
-
-####################################################################################################
+TITLE = L('Instagram Photos')
+####################################################################################################
 
 def Start():
+
+    Plugin.AddPrefixHandler(PHOTOS_PREFIX, PhotosMainMenu, TITLE, Resources.ICON, Resources.ART)
 
-    ## make this plugin show up in the 'Photos' section
-    ## in Plex. The L() function pulls the string out of the strings
-    ## file in the Contents/Strings/ folder in the bundle
-    ## see also:
-    ##  http://dev.plexapp.com/docs/mod_Plugin.html
-    ##  http://dev.plexapp.com/docs/Bundle.html#the-strings-directory
-    Plugin.AddPrefixHandler(PHOTOS_PREFIX, PhotosMainMenu, NAME, Resources.ICON, Resources.ART)
-
+    Log.Debug('Start: Adding View Groups...')
     Plugin.AddViewGroup('List', viewMode='List', mediaType='items')
     Plugin.AddViewGroup('Details', viewMode='InfoList', mediaType='items')
     Plugin.AddViewGroup('Pictures', viewMode='Pictures', mediaType='photos')
-
-    ## set some defaults so that you don't have to
-    ## pass these parameters to these object types
-    ## every single time
-    ## see also:
-    ##  http://dev.plexapp.com/docs/Objects.html
-    MediaContainer.title1 = NAME
-    MediaContainer.viewGroup = 'List'
-    MediaContainer.art = R(Resources.ART)
-    DirectoryItem.thumb = R(Resources.ICON)
-    VideoItem.thumb = R(Resources.ICON)
+
+    ObjectContainer.title1 = TITLE
+    ObjectContainer.view_group = 'List'
+    ObjectContainer.art = R(Resources.ART)
+    
+    DirectoryObject.thumb = R(Resources.ICON)
+    DirectoryObject.art = R(Resources.ART)
     
     HTTP.CacheTime = CACHE_1HOUR
     
@@ -56,7 +44,7 @@ def ValidatePrefs():
             'You need to provide both a user and password'
         )
         
-
+@handler('/photos/instaplex', TITLE)
 def PhotosMainMenu():
 
     # Container acting sort of like a folder on
@@ -64,156 +52,120 @@ def PhotosMainMenu():
     # 'sub-folders', videos, music, etc
     # see:
     #  http://dev.plexapp.com/docs/Objects.html#MediaContainer
-    dir = MediaContainer(viewGroup='Details')
+    oc = ObjectContainer(view_group='Details')
 
+    oc.add(DirectoryObject(key = Callback(PopularStream), title = 'Popular', tagline='The most popular', summary='The recent popular photos.'))
+    
+    
+#    oc.add(
+#        Function(
+#            DirectoryItem(
+#                MyPhotoStream,
+#                'My Photos',
+#                subtitle='Instagram',
+#                summary='Your own photos',
+#                thumb=R(Resources.ICON),
+#                art=R(Resources.ART)
+#            )
+#        )
+#    )
+#    
+#    oc.add(
+#        Function(
+#            DirectoryItem(
+#                ZurichStream,
+#                'Zurich',
+#                subtitle='Instagram',
+#                summary='Tag: #zurich',
+#                thumb=R(Resources.ICON),
+#                art=R(Resources.ART)
+#            )
+#        )
+#    )
+#    
+#    oc.Append(
+#        Function(
+#            DirectoryItem(
+#                NewYorkStream,
+#                'New York',
+#                subtitle='Instagram',
+#                summary='Tag: #newyork',
+#                thumb=R(Resources.ICON),
+#                art=R(Resources.ART)
+#            )
+#        )
+#    )
+#    
+#    oc.Append(
+#        Function(
+#            DirectoryItem(
+#                ParisStream,
+#                'Paris',
+#                subtitle='Instagram',
+#                summary='Tag: #paris',
+#                thumb=R(Resources.ICON),
+#                art=R(Resources.ART)
+#            )
+#        )
+#    )
+#    
 
-    # see:
-    #  http://dev.plexapp.com/docs/Objects.html#DirectoryItem
-    #  http://dev.plexapp.com/docs/Objects.html#function-objects
-    dir.Append(
-        Function(
-            DirectoryItem(
-                PopularStream,
-                'Popular',
-                subtitle='Instagram',
-                summary='The recent popular photos',
-                thumb=R(Resources.ICON),
-                art=R(Resources.ART)
-            )
-        )
-    )
-    
-    dir.Append(
-        Function(
-            DirectoryItem(
-                MyPhotoStream,
-                'My Photos',
-                subtitle='Instagram',
-                summary='Your own photos',
-                thumb=R(Resources.ICON),
-                art=R(Resources.ART)
-            )
-        )
-    )
-    
-    dir.Append(
-        Function(
-            DirectoryItem(
-                ZurichStream,
-                'Zurich',
-                subtitle='Instagram',
-                summary='Tag: #zurich',
-                thumb=R(Resources.ICON),
-                art=R(Resources.ART)
-            )
-        )
-    )
-    
-    dir.Append(
-        Function(
-            DirectoryItem(
-                NewYorkStream,
-                'New York',
-                subtitle='Instagram',
-                summary='Tag: #newyork',
-                thumb=R(Resources.ICON),
-                art=R(Resources.ART)
-            )
-        )
-    )
-    
-    dir.Append(
-        Function(
-            DirectoryItem(
-                ParisStream,
-                'Paris',
-                subtitle='Instagram',
-                summary='Tag: #paris',
-                thumb=R(Resources.ICON),
-                art=R(Resources.ART)
-            )
-        )
-    )
-    
-    dir.Append(
-        Function(
-            DirectoryItem(
-                LoginItem,
-                'Login',
-                subtitle='Login',
-                summary='Login to Instagram New',
-                thumb=R(Resources.ICON),
-                art=R(Resources.ART)
-            )
-        )
-    )
+    #oc.add(DirectoryObject(key = Callback(LoginItem), title = 'Login', tagline='Login', summary='Login to Instagram'))
   
-    # Part of the 'search' example 
-    # see also:
-    #   http://dev.plexapp.com/docs/Objects.html#InputDirectoryItem
-    dir.Append(
-        Function(
-            InputDirectoryItem(
-                SearchResults,
-                'Search title',
-                'Search subtitle',
-                summary='This lets you search stuff',
-                thumb=R(Resources.ICON),
-                art=R(Resources.ART)
-            )
-        )
-    )
+#    # Part of the 'search' example 
+#    # see also:
+#    #   http://dev.plexapp.com/docs/Objects.html#InputDirectoryItem
+#    oc.Append(
+#        Function(
+#            InputDirectoryItem(
+#                SearchResults,
+#                'Search title',
+#                'Search subtitle',
+#                summary='This lets you search stuff',
+#                thumb=R(Resources.ICON),
+#                art=R(Resources.ART)
+#            )
+#        )
+#    )
   
-    # Part of the 'preferences' example 
-    # see also:
-    #  http://dev.plexapp.com/docs/Objects.html#PrefsItem
-    #  http://dev.plexapp.com/docs/Functions.html#CreatePrefs
-    #  http://dev.plexapp.com/docs/Functions.html#ValidatePrefs 
-    dir.Append(
-        PrefsItem(
-            title='Your preferences',
-            subtile='So you can set preferences',
-            summary='lets you set preferences',
-            thumb=R(Resources.ICON)
-        )
-    )
-
+    oc.add(PrefsObject(title='Your preferences', tagline='So you can set preferences', summary='lets you set preferences'))
     # ... and then return the container
-    return dir
+    return oc
 
-def PopularStream(sender):
+def PopularStream():
     
 #    instaStream = InstaStream.InstaStream();
-    dir = getPopularStream()
-    return dir
+    oc = getPopularStream()
+    return oc
 
-def MyPhotoStream(sender):
+def MyPhotoStream():
     
 #    instaStream = InstaStream.InstaStream();
-    dir = getOwnPhotosStream()
-    return dir
+    oc = getOwnPhotosStream()
+    return oc
     
-def ZurichStream(sender):
-    
-#    instaStream = InstaStream.InstaStream();
-    dir = getTagStream(tag = 'zurich')
-    return dir
-
-def NewYorkStream(sender):
+def ZurichStream():
     
 #    instaStream = InstaStream.InstaStream();
-    dir = getTagStream(tag = 'newyork')
-    return dir
+    oc = getTagStream(tag = 'zurich')
+    return oc
 
-def ParisStream(sender):
+def NewYorkStream():
     
 #    instaStream = InstaStream.InstaStream();
-    dir = getTagStream(tag = 'paris')
-    return dir
+    oc = getTagStream(tag = 'newyork')
+    return oc
 
-def LoginItem(sender):
+def ParisStream():
     
-    global token   
+#    instaStream = InstaStream.InstaStream();
+    oc = getTagStream(tag = 'paris')
+    return oc
+
+def LoginItem():
+    
+    # TODO: BAD! Don't use globals - store it in the context! (Per user, threading!)
+    
     Log.Debug('InstaAuth Inst')
     instaAuth = InstaAuth.InstaAuth()
 
@@ -228,10 +180,10 @@ def LoginItem(sender):
 # query will contain the string that the user entered
 # see also:
 #   http://dev.plexapp.com/docs/Objects.html#InputDirectoryItem
-def SearchResults(sender,query=None):
-    return MessageContainer(
-        'Not implemented',
-        'In real life, you would probably perform some search using python\nand then build a MediaContainer with items\nfor the results'
+def SearchResults(query=None):
+    return PopupDirectoryObject(
+        title='Not implemented',
+        summary='In real life, you would probably perform some search using python\nand then build a MediaContainer with items\nfor the results'
     )
     
 def getPopularStream():
@@ -239,8 +191,8 @@ def getPopularStream():
     token = Data.Load('oauthtoken')
     
     title = "Popular"
-    request = HTTP.Request(WebKeys.POPULAR_URL + token)
-    return readStream(title, WebKeys.POPULAR_URL + token)
+    #request = HTTP.Request(WebKeys.POPULAR_URL + token)
+    return readStream(title, WebKeys.POPULAR_URL)
  
 def getOwnPhotosStream():
     '''Retrieves the user photos; user needs to be logged in, that is a valid OAuth 2 token is necessary.'''
@@ -262,28 +214,31 @@ def getTagStream(tag, name = None):
     return readStream(title, WebKeys.TAG_STREAM_URL % tag)
 
 def readStream(title, url):
-    dir = MediaContainer(title2 = title, viewGroup = 'Pictures')
-    photoItem = None
+    oc = ObjectContainer(title2 = title, view_group = 'Pictures')
+    photoObject = None
     #request.load()
     #stream = simplejson.loads(request.content)
     #s = simplejson.dumps(stream, sort_keys=True, indent=4 * ' ')
+    Log.Debug('Getting JSON from url:' + url)
     stream = JSON.ObjectFromURL(url)
+    Log.Debug('Got JSON from url:' + url)
     #Log.Debug('\n'.join([l.rstrip() for l in  s.splitlines()]))
     for data in stream['data']:
-        photoItem = getPhotoItem(data)
+        photoObject = getPhotoObject(data)
         
-        if (photoItem != None):
-            dir.Append(photoItem)
-            
-    pagination = stream['pagination']
-    if pagination != None:
-        nextUrl = pagination['next_url']
-        Log.Debug('Next URL: ' + str(nextUrl))            
-        dir.Append(Function(DirectoryItem(morePhotos, "Next"), url = nextUrl, title = title))
+        if (photoObject != None):
+            oc.add(photoObject)
+    
+    if 'pagination' in stream:        
+        pagination = stream['pagination']
+        if pagination != None:
+            nextUrl = pagination['next_url']
+            Log.Debug('Next URL: ' + str(nextUrl))            
+            dir.Append(Function(DirectoryItem(morePhotos, "Next"), url = nextUrl, title = title))
         
-    return dir
+    return oc
 
-def getPhotoItem(data):
+def getPhotoObject(data):
     url = data['images']['standard_resolution']['url']
     thumbUrl = data['images']['thumbnail']['url']
     comment = None
@@ -292,12 +247,22 @@ def getPhotoItem(data):
         comment = data['comments']['data'][0]['text']
     if data['caption'] != None:
         caption = data['caption']['text']
-    return PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl)
+    photoObject = PhotoObject(title=caption, summary=comment, key=url, rating_key=url, thumb=Callback(getThumb, url=thumbUrl))
+    return photoObject
 
-def morePhotos(sender, title,  url):
+def morePhotos(title,  url):
     Log.Debug('Next URL called: ' + url)
-    request = HTTP.Request(url)
-    return readStream(title, request)
+    #request = HTTP.Request(url)
+    return readStream(title = title, url = url)
+
+def getThumb(url):
+  try:
+    Log.Debug('Calling thumb for url: ' + url)
+    data = HTTP.Request(url, cacheTime = CACHE_1MONTH).content
+    return DataObject(data, 'image/jpeg')
+  except:
+    Log.Debug('getThumb. exception happened!')
+    return Redirect(R(Resources.ICON))
     
     
   

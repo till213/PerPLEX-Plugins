@@ -12,8 +12,8 @@ def getPopularStream():
     token = Data.Load('oauthtoken')
     
     title = "Popular"
-    request = HTTP.Request(WebKeys.POPULAR_URL + token)
-    return readStream(title, WebKeys.POPULAR_URL + token)
+    request = HTTP.Request(WebKeys.POPULAR_URL)
+    return readStream(title, WebKeys.POPULAR_URL)
  
 def getOwnPhotosStream():
     '''Retrieves the user photos; user needs to be logged in, that is a valid OAuth 2 token is necessary.'''
