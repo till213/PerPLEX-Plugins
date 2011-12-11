@@ -11,8 +11,8 @@ def getPopularStream():
     '''Retrieves the Popular photo stream'''
     token = Data.Load('oauthtoken')
     
+    Log.Debug('Called InstaStream functions...')
     title = "Popular"
-    request = HTTP.Request(WebKeys.POPULAR_URL)
     return readStream(title, WebKeys.POPULAR_URL)
  
 def getOwnPhotosStream():
@@ -20,7 +20,6 @@ def getOwnPhotosStream():
     token = Data.Load('oauthtoken')
     
     title = "My Photos"
-    request = HTTP.Request(WebKeys.MY_PHOTOS_URL + token)
     return readStream(title, WebKeys.MY_PHOTOS_URL + token)
 
 def getTagStream(tag, name = None):
@@ -31,45 +30,33 @@ def getTagStream(tag, name = None):
         title = name
     else:
         title = tag
-    request = HTTP.Request(WebKeys.TAG_STREAM_URL % tag) 
     return readStream(title, WebKeys.TAG_STREAM_URL % tag)
 
 def readStream(title, url):
-    dir = MediaContainer(title2 = title, viewGroup = 'Pictures')
-    photoItem = None
+    oc = ObjectContainer(title2 = title, view_group = 'Pictures')
+    photoObject = None
     #request.load()
     #stream = simplejson.loads(request.content)
-    stream = JSON.ObjectFromURL(url)
     #s = simplejson.dumps(stream, sort_keys=True, indent=4 * ' ')
+    Log.Debug('Getting JSON from url:' + url)
+    stream = JSON.ObjectFromURL(url)
+    Log.Debug('Got JSON from url:' + url)
     #Log.Debug('\n'.join([l.rstrip() for l in  s.splitlines()]))
     for data in stream['data']:
-        photoItem = getPhotoItem(data)
+        photoObject = getPhotoObject(data)
         
-        if (photoItem != None):
-            dir.Append(photoItem)
-            
-    pagination = stream['pagination']
-    if pagination != None:
-        nextUrl = pagination['next_url']
-        Log.Debug('Next URL: ' + str(nextUrl))            
-        #dir.Append(PhotoItem(Function(nextUrlF), title="title", summary="summary", thumb=None))
-        dir.Append(
-            Function(
-                DirectoryItem(
-                    nextUrlF3,
-                    'Next',
-                    subtitle='Instagram',
-                    summary='Tag: #newyork',
-                    thumb=R(Resources.ICON),
-                    art=R(Resources.ART)
-                )
-            )
-        )
+        if (photoObject != None):
+            oc.add(photoObject)
+    
+    if 'pagination' in stream:        
+        pagination = stream['pagination']
+        if pagination != None:
+            nextUrl = pagination['next_url']      
+            oc.add(DirectoryObject(key = Callback(morePhotos, url=nextUrl, title=title), title = 'Next...'))
         
-        
-    return dir
+    return oc
 
-def getPhotoItem(data):
+def getPhotoObject(data):
     url = data['images']['standard_resolution']['url']
     thumbUrl = data['images']['thumbnail']['url']
     comment = None
@@ -78,15 +65,20 @@ def getPhotoItem(data):
         comment = data['comments']['data'][0]['text']
     if data['caption'] != None:
         caption = data['caption']['text']
-    return PhotoItem(url, title=caption, summary=comment, thumb=thumbUrl)
+    photoObject = PhotoObject(title=caption, summary=comment, key=url, rating_key=url, thumb=Callback(getThumb, url=thumbUrl))
+    return photoObject
 
-def nextUrlF3(sender):
-    Log.Debug('Next URL called.')
-    return MessageContainer(
-        'Not implemented',
-        'In real life, you would probably perform some search using python\nand then build a MediaContainer with items\nfor the results'
-    )
+def morePhotos(title,  url):
+    Log.Debug('Next URL called: ' + url)
+    return readStream(title = title, url = url)
 
-
-       
+def getThumb(url):
+  try:
+    Log.Debug('Calling thumb for url: ' + url)
+    data = HTTP.Request(url, cacheTime = CACHE_1MONTH).content
+    return DataObject(data, 'image/jpeg')
+  except:
+    Log.Debug('getThumb. exception happened!')
+    return Redirect(R(Resources.ICON))
+    
    
