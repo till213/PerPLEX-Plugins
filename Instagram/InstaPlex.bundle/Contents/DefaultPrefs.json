@@ -11,5 +11,17 @@
         "label": "Password",
         "default": "",
         "option": "hidden"
+    },
+    {
+        "id": "cities",
+        "type": "text",
+        "label": "Cities",
+        "default": "zurich newyork paris london"
+    },
+    {
+        "id": "nature",
+        "type": "text",
+        "label": "Nature",
+        "default": "flower tree rose cat dog"
     }
 ]

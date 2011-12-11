@@ -33,7 +33,6 @@ def getTagStream(tag, name = None):
     else:
         title = tag
     Data.Remove('navig')
-    Log.Debug('-------- Removed navig, exists: ' + str(Data.Exists('navig')))
     return readStream(url = WebKeys.TAG_STREAM_URL % tag, title = title)
 
 def readStream(url, title, forward = True):
@@ -46,32 +45,6 @@ def readStream(url, title, forward = True):
         if (photoObject != None):
             oc.add(photoObject)
      
-#    if forward:
-#        if Data.Exists('navig'):  
-#            nav = Data.LoadObject('navig')
-#            if len(nav) > 0:                
-#                previousUrl = nav[-1]
-#                parsedUrl = urlparse.urlparse(previousUrl)
-#                oc.add(DirectoryObject(key = Callback(morePhotos, url=previousUrl, title=title, forward=False), title = 'Previous...', thumb = R(Resources.PREVIOUS_ICON)))
-#        nav.append(url)
-#    else:
-#        if Data.Exists('navig'):    
-#            nav = Data.LoadObject('navig')
-#            nav.pop()
-#            if len(nav) > 1:
-#                # the last element points to the page we're currently on; so take the second-last element     
-#                previousUrl = nav[-2]
-#                oc.add(DirectoryObject(key = Callback(morePhotos, url=previousUrl, title=title, forward=False), title = 'Previous...', thumb = R(Resources.PREVIOUS_ICON)))
-#      
-#    Data.SaveObject('navig', nav)
-#
-#    if 'pagination' in stream:        
-#        pagination = stream['pagination']
-#        Log.Debug('Pagination: ' + str(pagination))
-#        if pagination != None:
-#            nextUrl = pagination['next_url']
-#            oc.add(DirectoryObject(key = Callback(morePhotos, url=nextUrl, title=title, forward=True), title = 'Next...', thumb = R(Resources.NEXT_ICON)))
-
     addNavigation(url = url, title = title, stream = stream, forward = forward, objectContainer = oc)    
     return oc
 

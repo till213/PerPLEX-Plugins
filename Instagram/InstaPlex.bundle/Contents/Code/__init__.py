@@ -25,12 +25,15 @@ def Start():
     
     HTTP.CacheTime = 0 #CACHE_1HOUR
     
+    Log.Debug('**** Cities: ' + str(Prefs['cities']));
+    
 
 def ValidatePrefs():
     u = Prefs['username']
     p = Prefs['password']
     ## do some checks and return a
     ## message container
+    
     if( u and p ):
         return MessageContainer(
             'Success',
@@ -42,21 +45,40 @@ def ValidatePrefs():
             'You need to provide both a user and password'
         )
         
+    
+        
 @handler('/photos/instaplex', TITLE)
 def PhotosMainMenu():
+    
+    subMenu = None
+
+    Log.Debug('Instagram: Creating menu...')
 
     oc = ObjectContainer(view_group='Details')
 
-    oc.add(DirectoryObject(key = Callback(PopularStream), title = 'Popular', tagline='The most popular', summary='The recent popular photos.'))
-    oc.add(DirectoryObject(key = Callback(MyPhotoStream), title = 'My Photos', summary='Photos I have done.'))
+    oc.add(DirectoryObject(key = Callback(PopularStream), title = 'Popular', summary='The recent popular photos'))
+    oc.add(DirectoryObject(key = Callback(MyPhotoStream), title = 'My Photos', summary='Photos I have done'))
     
-    oc.add(DirectoryObject(key = Callback(ZurichStream), title = 'Zurich', tagline='Photos from Zurich', summary='These are photos from Zurich'))
-    oc.add(DirectoryObject(key = Callback(NewYorkStream), title = 'New York', tagline='Photos from New York', summary='These are photos from New York'))
-    oc.add(DirectoryObject(key = Callback(ParisStream), title = 'Paris', tagline='Photos from Paris', summary='These are photos from Paris')) 
-  
+    cities = Prefs['cities']
+    if cities != '':
+        oc.add(DirectoryObject(key = Callback(TagsMenu, category =  'cities', summary = "Cities around the world"), title = 'Cities', summary='Cities around the world'))
+
+    cities = Prefs['nature']
+    if cities != '':
+        oc.add(DirectoryObject(key = Callback(TagsMenu, category =  'nature', summary = "Nature"), title = 'Nature', summary='Nature'))
+
     oc.add(DirectoryObject(key = Callback(LoginItem), title = 'Login', tagline='Login', summary='Login to Instagram'))  
     oc.add(PrefsObject(title='Your preferences', tagline='So you can set preferences', summary='lets you set preferences'))
     return oc
+
+def TagsMenu(category, summary):
+
+    oc = ObjectContainer(view_group='Details')
+   
+    tags = Prefs[category]
+    for tag in tags.split(' '):
+        oc.add(DirectoryObject(key = Callback(TagStream, tag = tag), title = tag, summary = summary))
+    return oc    
 
 def PopularStream():
     oc = InstaStream.getPopularStream()
@@ -65,19 +87,13 @@ def PopularStream():
 def MyPhotoStream():
     oc = InstaStream.getOwnPhotosStream()
     return oc
-    
-def ZurichStream():
-    oc = InstaStream.getTagStream(tag = 'zurich')
+
+@indirect
+def TagStream(tag):
+    oc = InstaStream.getTagStream(tag = tag)
     return oc
 
-def NewYorkStream():
-    oc = InstaStream.getTagStream(tag = 'newyork')
-    return oc
-
-def ParisStream():
-    oc = InstaStream.getTagStream(tag = 'paris')
-    return oc
-
+@indirect
 def LoginItem():  
     Log.Debug('LoginItem CALLED. InstaAuth Inst')
     instaAuth = InstaAuth.InstaAuth()
