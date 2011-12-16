@@ -24,7 +24,7 @@ def getOwnPhotosStream():
     return readStream(url = WebKeys.MY_PHOTOS_URL + token, title = 'My Photos')
 
 def getTagStream(tag, name = None):
-    '''Retrieves the Instagram photo stream, given by its tag and returns a MediaContainer containing the photo URLs
+    '''Retrieves the Instagram photo stream, given by its tag and returns a ObjectContainer containing the photo URLs
     named name'''
     
     title = None
@@ -34,6 +34,15 @@ def getTagStream(tag, name = None):
         title = tag
     Data.Remove('navig')
     return readStream(url = WebKeys.TAG_STREAM_URL % tag, title = title)
+
+def getUserStream(id, name):
+    '''Retrieves the Instagram user's stream, given by ID and returns a ObjectContainer containing the photo URLs
+    named name'''
+    
+    token = Data.Load('oauthtoken')
+    Data.Remove('navig')
+    Log.Debug('+++++++++++Users stream: requesting: ' +  WebKeys.USER_URL % id + token)
+    return readStream(url = WebKeys.USER_URL % id + token, title = name)
 
 def readStream(url, title, forward = True):
     oc = ObjectContainer(title2 = title, view_group = 'Pictures', no_history=True)

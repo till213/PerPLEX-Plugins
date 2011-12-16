@@ -1,5 +1,6 @@
 import InstaAuth
 import InstaStream
+import InstaUser
 import WebKeys
 import Resources
 
@@ -29,11 +30,36 @@ def Start():
     
 
 def ValidatePrefs():
+     
     u = Prefs['username']
     p = Prefs['password']
-    ## do some checks and return a
-    ## message container
     
+    names = Prefs['users']
+    users = Data.LoadObject('users')
+    if users != None:
+        for name in users.keys():
+            if name not in names.split(' '):
+                del users[name]
+    else:
+        users = {}
+    
+    for name in names.split(' '):
+        
+        if name in users.keys():
+            id = users[name]
+            if id == None:
+                id = InstaUser.search(name = name)
+                users[name] = id
+        else:
+            id = InstaUser.search(name = name)
+            users[name] = id
+            
+    Data.SaveObject('users', users)
+    
+    Log.Debug('Users validated, count: ' + str(len(users)))    
+    for user in users.keys():
+        Log.Debug('User:' + user + ' ID: ' + users[user])
+        
     if( u and p ):
         return MessageContainer(
             'Success',
@@ -44,9 +70,8 @@ def ValidatePrefs():
             'Error',
             'You need to provide both a user and password'
         )
-        
+                      
     
-        
 @handler('/photos/instaplex', TITLE)
 def PhotosMainMenu():
     
@@ -59,13 +84,17 @@ def PhotosMainMenu():
     oc.add(DirectoryObject(key = Callback(PopularStream), title = 'Popular', summary='The recent popular photos'))
     oc.add(DirectoryObject(key = Callback(MyPhotoStream), title = 'My Photos', summary='Photos I have done'))
     
-    cities = Prefs['cities']
-    if cities != '':
+    category = Prefs['cities']
+    if category != '':
         oc.add(DirectoryObject(key = Callback(TagsMenu, category =  'cities', summary = "Cities around the world"), title = 'Cities', summary='Cities around the world'))
 
-    cities = Prefs['nature']
-    if cities != '':
+    category = Prefs['nature']
+    if category != '':
         oc.add(DirectoryObject(key = Callback(TagsMenu, category =  'nature', summary = "Nature"), title = 'Nature', summary='Nature'))
+        
+    category = Prefs['users']
+    if category != '':
+        oc.add(DirectoryObject(key = Callback(UsersMenu, category =  'users', summary = "Users"), title = 'Users', summary='Users'))
 
     oc.add(DirectoryObject(key = Callback(LoginItem), title = 'Login', tagline='Login', summary='Login to Instagram'))  
     oc.add(PrefsObject(title='Your preferences', tagline='So you can set preferences', summary='lets you set preferences'))
@@ -80,6 +109,16 @@ def TagsMenu(category, summary):
         oc.add(DirectoryObject(key = Callback(TagStream, tag = tag), title = tag, summary = summary))
     return oc    
 
+def UsersMenu(category, summary):
+
+    users = {}
+    oc = ObjectContainer(view_group='Details')
+   
+    users = Data.LoadObject('users')
+    for user in sorted(users.iterkeys()):
+        oc.add(DirectoryObject(key = Callback(UserStream, id = users[user], name = user), title = user, summary = summary))
+    return oc    
+
 def PopularStream():
     oc = InstaStream.getPopularStream()
     return oc
@@ -91,6 +130,11 @@ def MyPhotoStream():
 @indirect
 def TagStream(tag):
     oc = InstaStream.getTagStream(tag = tag)
+    return oc
+
+@indirect
+def UserStream(id, name):
+    oc = InstaStream.getUserStream(id = id, name = name)
     return oc
 
 @indirect

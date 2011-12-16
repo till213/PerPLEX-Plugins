@@ -23,5 +23,11 @@
         "type": "text",
         "label": "Nature",
         "default": "flower tree rose cat dog"
+    },
+    {
+        "id": "users",
+        "type": "text",
+        "label": "Users",
+        "default": "till213 jacobmeudtphotography mikevelvet hiro_pon_165"
     }
 ]
