@@ -4,10 +4,6 @@
 <dict>
      <key>CFBundleIdentifier</key>
      <string>com.plexapp.plugins.instaplex</string>
-     <key>PlexAudioCodec</key>
-     <array>
-             <string>AAC</string>
-     </array>
      <key>PlexClientPlatforms</key>
      <string>MacOSX,iOS,Android,LGTV</string>
      <key>PlexFrameworkVersion</key>

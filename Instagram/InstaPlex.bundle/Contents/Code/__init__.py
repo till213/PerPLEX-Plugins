@@ -3,10 +3,11 @@ import InstaStream
 import InstaUser
 import WebKeys
 import Resources
+import Constants
 
 PHOTOS_PREFIX = '/photos/instaplex'
 
-TITLE = L('Instagram Photos')
+TITLE = L('Instagram')
 
 def Start():
 
@@ -26,16 +27,14 @@ def Start():
     
     HTTP.CacheTime = 0 #CACHE_1HOUR
     
-    Log.Debug('**** Cities: ' + str(Prefs['cities']));
-    
 
 def ValidatePrefs():
      
-    u = Prefs['username']
-    p = Prefs['password']
+    u = Prefs[Constants.PREF_USERNAME]
+    p = Prefs[Constants.PREF_PASSWORD]
     
-    names = Prefs['users']
-    users = Data.LoadObject('users')
+    names = Prefs[Constants.PREF_USERS]
+    users = Data.LoadObject(Constants.DATA_USERS)
     if users != None:
         for name in users.keys():
             if name not in names.split(' '):
@@ -54,7 +53,7 @@ def ValidatePrefs():
             id = InstaUser.search(name = name)
             users[name] = id
             
-    Data.SaveObject('users', users)
+    Data.SaveObject(Constants.DATA_USERS, users)
     
     Log.Debug('Users validated, count: ' + str(len(users)))    
     for user in users.keys():
@@ -70,14 +69,14 @@ def ValidatePrefs():
             'Error',
             'You need to provide both a user and password'
         )
+        
+def SetRating(key, rating):
+    Log.Debug('-------------------SetRating: key: ' + key + ' rating: ' + str(rating))
+    return
                       
     
 @handler('/photos/instaplex', TITLE)
 def PhotosMainMenu():
-    
-    subMenu = None
-
-    Log.Debug('Instagram: Creating menu...')
 
     oc = ObjectContainer(view_group='Details')
 
@@ -86,15 +85,15 @@ def PhotosMainMenu():
     
     category = Prefs['cities']
     if category != '':
-        oc.add(DirectoryObject(key = Callback(TagsMenu, category =  'cities', summary = "Cities around the world"), title = 'Cities', summary='Cities around the world'))
+        oc.add(DirectoryObject(key = Callback(TagsMenu, category = 'cities', summary = "Cities around the world"), title = 'Cities', summary='Cities around the world'))
 
     category = Prefs['nature']
     if category != '':
-        oc.add(DirectoryObject(key = Callback(TagsMenu, category =  'nature', summary = "Nature"), title = 'Nature', summary='Nature'))
+        oc.add(DirectoryObject(key = Callback(TagsMenu, category = 'nature', summary = "Nature"), title = 'Nature', summary='Nature'))
         
     category = Prefs['users']
     if category != '':
-        oc.add(DirectoryObject(key = Callback(UsersMenu, category =  'users', summary = "Users"), title = 'Users', summary='Users'))
+        oc.add(DirectoryObject(key = Callback(UsersMenu), title = 'Users', summary='Users'))
 
     oc.add(DirectoryObject(key = Callback(LoginItem), title = 'Login', tagline='Login', summary='Login to Instagram'))  
     oc.add(PrefsObject(title='Your preferences', tagline='So you can set preferences', summary='lets you set preferences'))
@@ -102,21 +101,22 @@ def PhotosMainMenu():
 
 def TagsMenu(category, summary):
 
-    oc = ObjectContainer(view_group='Details')
+    oc = ObjectContainer(view_group='Details', title2 = category)
    
     tags = Prefs[category]
     for tag in tags.split(' '):
-        oc.add(DirectoryObject(key = Callback(TagStream, tag = tag), title = tag, summary = summary))
+        title = tag[0].capitalize() + tag[1:]
+        oc.add(DirectoryObject(key = Callback(TagStream, tag = tag), title = title, summary = summary))
     return oc    
 
-def UsersMenu(category, summary):
+def UsersMenu():
 
     users = {}
     oc = ObjectContainer(view_group='Details')
    
     users = Data.LoadObject('users')
     for user in sorted(users.iterkeys()):
-        oc.add(DirectoryObject(key = Callback(UserStream, id = users[user], name = user), title = user, summary = summary))
+        oc.add(DirectoryObject(key = Callback(UserStream, id = users[user], name = user), title = user, summary = "The User Summary"))
     return oc    
 
 def PopularStream():

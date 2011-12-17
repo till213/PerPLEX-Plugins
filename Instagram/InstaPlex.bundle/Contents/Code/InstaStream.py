@@ -6,8 +6,10 @@ Created on 04.12.2011
 
 import urlparse
 
+import InstaMeta
 import WebKeys
 import Resources
+from Constants import *
     
 def getPopularStream():
     '''Retrieves the Popular photo stream'''
@@ -31,7 +33,8 @@ def getTagStream(tag, name = None):
     if (name != None):
         title = name
     else:
-        title = tag
+        title = tag[0].capitalize() + tag[1:]
+        
     Data.Remove('navig')
     return readStream(url = WebKeys.TAG_STREAM_URL % tag, title = title)
 
@@ -41,15 +44,13 @@ def getUserStream(id, name):
     
     token = Data.Load('oauthtoken')
     Data.Remove('navig')
-    Log.Debug('+++++++++++Users stream: requesting: ' +  WebKeys.USER_URL % id + token)
     return readStream(url = WebKeys.USER_URL % id + token, title = name)
 
 def readStream(url, title, forward = True):
     oc = ObjectContainer(title2 = title, view_group = 'Pictures', no_history=True)
     photoObject = None
     stream = JSON.ObjectFromURL(url)
-    #Log.Debug('\n'.join([l.rstrip() for l in  str(stream).splitlines()]))
-    for data in stream['data']:
+    for data in stream[IG_DATA]:
         photoObject = getPhotoObject(data)        
         if (photoObject != None):
             oc.add(photoObject)
@@ -60,13 +61,19 @@ def readStream(url, title, forward = True):
 def getPhotoObject(data):
     url = data['images']['standard_resolution']['url']
     thumbUrl = data['images']['thumbnail']['url']
-    comment = None
-    caption = None
-    if len(data['comments']['data']) > 0:
-        comment = data['comments']['data'][0]['text']
-    if data['caption'] != None:
-        caption = data['caption']['text']
-    photoObject = PhotoObject(title=caption, summary=comment, key=url, rating_key=url, thumb=Callback(getThumb, url=thumbUrl))
+    title = InstaMeta.getPhotoTitle(data)
+    summary = InstaMeta.getPhotoSummary(data)
+    tags = InstaMeta.getTags(data)
+    date = InstaMeta.getDate(data)
+    photoObject = PhotoObject(
+      title = title,
+      summary = summary,
+      key = url,
+      rating_key = url,
+      tags = tags,
+      originally_available_at = date,
+      thumb = Callback(getThumb, url=thumbUrl)
+    )
     return photoObject
 
 def addNavigation(url, title, stream, forward, objectContainer):
